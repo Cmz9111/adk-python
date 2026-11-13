@@ -43,37 +43,44 @@ string literal.
 """
 
 
+### BEGIN_GENERATED_CODE: NodeInfo
+### Do not edit, code generation overwrites it.
 class NodeInfo(BaseModel):
   """Workflow node metadata attached to an Event."""
 
   model_config = ConfigDict(
-      ser_json_bytes='base64',
-      val_json_bytes='base64',
       alias_generator=alias_generators.to_camel,
       populate_by_name=True,
+      ser_json_bytes='base64',
+      val_json_bytes='base64',
   )
 
-  path: str = ''
-  """The path of the node in the workflow.
-  In a workflow A, if node B is directly under A, and B emits an event, the
-  path will be "A/B". Agent state event will have path as "A".
-  """
+  path: str = Field(
+      default='',
+      description="""The path of the node in the workflow.
 
-  output_for: list[str] | None = None
-  """Node paths whose output this event represents.
+In a workflow A, if node B is directly under A, and B emits an event, the
+path will be "A/B". Agent state event will have path as "A".""",
+  )
 
-  Set on events that carry an output value. When set, the output field
-  of this event is also considered the output for each listed node path
-  in the same invocation. For example, ``["wf/A@1/B@1", "wf/A@1"]`` means
-  this event's output counts as the output for both.
-  """
+  output_for: list[str] | None = Field(
+      default=None,
+      description="""Node paths whose output this event represents.
 
-  message_as_output: bool | None = None
-  """When True, this event's content is the node's output.
+Set on events that carry an output value. When set, the output field
+of this event is also considered the output for each listed node path
+in the same invocation. For example, ``["wf/A@1/B@1", "wf/A@1"]`` means
+this event's output counts as the output for both.""",
+  )
 
-  No separate output event is needed — the content event already
-  carries the output value.
-  """
+  message_as_output: bool | None = Field(
+      default=None,
+      description="""When True, this event's content is the node's output.
+
+No separate output event is needed — the content event already
+carries the output value.""",
+  )
+  ### END_GENERATED_CODE: NodeInfo
 
   @property
   def run_id(self) -> str:
@@ -95,6 +102,8 @@ class NodeInfo(BaseModel):
     return _NodePathBuilder.from_string(self.path).node_name
 
 
+### BEGIN_GENERATED_CODE: Event
+### Do not edit, code generation overwrites it.
 class Event(LlmResponse):
   """Represents an event in a conversation between agents and users.
 
@@ -107,66 +116,89 @@ class Event(LlmResponse):
   """
 
   model_config = ConfigDict(
+      alias_generator=alias_generators.to_camel,
       extra='ignore',
+      populate_by_name=True,
       ser_json_bytes='base64',
       val_json_bytes='base64',
-      alias_generator=alias_generators.to_camel,
-      populate_by_name=True,
   )
   """The pydantic model config."""
 
+  id: str = Field(
+      default='',
+      description="""The unique identifier of the event.
+
+Computed: do not assign the ID. It will be assigned by the session.""",
+  )
+
+  invocation_id: str = Field(
+      default='',
+      description="""The invocation ID of the event. Should be non-empty before appending to a session.""",
+  )
+
+  author: str = Field(
+      default='',
+      description="""'user' or the name of the agent, indicating who appended the event to the
+session.""",
+  )
+
+  actions: EventActions = Field(
+      default_factory=EventActions,
+      description="""The actions taken by the agent.""",
+  )
+
+  output: Any | None = Field(
+      default=None, description="""Generic data output from a workflow node."""
+  )
+
+  node_info: NodeInfo = Field(
+      default_factory=NodeInfo,
+      description="""Workflow node metadata (path, run_id, etc.).""",
+  )
+
+  long_running_tool_ids: set[str] | None = Field(
+      default=None,
+      description="""Set of ids of the long running function calls.
+Agent client will know from this field about which function call is long running.
+only valid for function call event""",
+  )
+
+  branch: str | None = Field(
+      default=None,
+      description="""The branch of the event.
+
+The format is like agent_1.agent_2.agent_3, where agent_1 is the parent of
+agent_2, and agent_2 is the parent of agent_3.
+
+Branch is used when multiple sub-agent shouldn't see their peer agents'
+conversation history.""",
+  )
+
+  isolation_scope: str | None = Field(
+      default=None,
+      description="""Scope tag indicating which logical context this event belongs to.
+
+When set, the LLM content-builder restricts session events visible to
+an agent to those whose ``isolation_scope`` matches the agent's own
+scope.  One usage today is the Task API: a delegated task agent is
+scoped under the originating function-call id (``<fc_id>``) so it
+sees only its own task's events, isolated from the chat
+coordinator's broader conversation.
+
+⚠️ DO NOT USE THIS FIELD DIRECTLY.  It is an internal mechanism that
+may change without notice.  External code should not read, write, or
+rely on its semantics.""",
+  )
+
+  timestamp: float = Field(
+      default_factory=lambda: platform_time.get_time(),
+      description="""The timestamp of the event.
+
+Computed: set to the current time when the event is created.""",
+  )
+  ### END_GENERATED_CODE: Event
+
   __deepcopy__ = _model_copy.deep_copy_model
-
-  invocation_id: str = ''
-  """The invocation ID of the event. Should be non-empty before appending to a session."""
-  author: str = ''
-  """'user' or the name of the agent, indicating who appended the event to the
-  session."""
-  actions: EventActions = Field(default_factory=EventActions)
-  """The actions taken by the agent."""
-
-  output: Any | None = None
-  """Generic data output from a workflow node."""
-
-  node_info: NodeInfo = Field(default_factory=NodeInfo)
-  """Workflow node metadata (path, run_id, etc.)."""
-
-  long_running_tool_ids: set[str] | None = None
-  """Set of ids of the long running function calls.
-  Agent client will know from this field about which function call is long running.
-  only valid for function call event
-  """
-
-  branch: str | None = None
-  """The branch of the event.
-
-  The format is like agent_1.agent_2.agent_3, where agent_1 is the parent of
-  agent_2, and agent_2 is the parent of agent_3.
-
-  Branch is used when multiple sub-agent shouldn't see their peer agents'
-  conversation history.
-  """
-  isolation_scope: str | None = None
-  """Scope tag indicating which logical context this event belongs to.
-
-  When set, the LLM content-builder restricts session events visible to
-  an agent to those whose ``isolation_scope`` matches the agent's own
-  scope.  One usage today is the Task API: a delegated task agent is
-  scoped under the originating function-call id (``<fc_id>``) so it
-  sees only its own task's events, isolated from the chat
-  coordinator's broader conversation.
-
-  ⚠️ DO NOT USE THIS FIELD DIRECTLY.  It is an internal mechanism that
-  may change without notice.  External code should not read, write, or
-  rely on its semantics.
-  """
-
-  # The following are computed fields.
-  # Do not assign the ID. It will be assigned by the session.
-  id: str = ''
-  """The unique identifier of the event."""
-  timestamp: float = Field(default_factory=lambda: platform_time.get_time())
-  """The timestamp of the event."""
 
   @field_serializer('long_running_tool_ids')
   def _serialize_long_running_tool_ids(

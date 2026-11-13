@@ -22,6 +22,8 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 
+### BEGIN_GENERATED_CODE: UiWidget
+### Do not edit, code generation overwrites it.
 class UiWidget(BaseModel):
   """Rendering metadata for a UI widget associated with an event.
 
@@ -30,30 +32,34 @@ class UiWidget(BaseModel):
   """
 
   model_config = ConfigDict(
-      extra='forbid',
       alias_generator=alias_generators.to_camel,
+      extra='forbid',
       populate_by_name=True,
   )
 
-  id: str
-  """The unique identifier of the UI widget."""
+  id: str = Field(description="""The unique identifier of the UI widget.""")
 
-  provider: str
-  """Widget provider identifier. Determines which rendering strategy
-  the UI uses.
+  provider: str = Field(
+      description="""Widget provider identifier. Determines which rendering strategy
+the UI uses.
 
-  Known values:
-    - 'mcp': MCP App iframe, rendered with the MCP Apps AppBridge.
-  """
+Known values:
+- 'mcp': MCP App iframe, rendered with the MCP Apps AppBridge."""
+  )
 
-  payload: dict[str, Any] = Field(default_factory=dict)
-  """Provider-specific data required for rendering.
+  payload: dict[str, Any] = Field(
+      default_factory=dict,
+      description="""Provider-specific data required for rendering.
 
-  If provider is 'mcp', the payload is a dictionary with the following fields:
+If provider is 'mcp', the payload is a dictionary with the following
+fields:
+
   {
-    "resource_uri: "ui://...",
+    "resource_uri": "ui://...",
     "tool": {...},
     "tool_args": {...}
   }
-  Future providers can have their set of payload fields.
-  """
+
+Future providers can have their own set of payload fields.""",
+  )
+  ### END_GENERATED_CODE: UiWidget

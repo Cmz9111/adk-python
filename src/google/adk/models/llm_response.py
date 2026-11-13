@@ -23,8 +23,11 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 
 from .cache_metadata import CacheMetadata
+from pydantic import Field
 
 
+### BEGIN_GENERATED_CODE: LlmResponse
+### Do not edit, code generation overwrites it.
 class LlmResponse(BaseModel):
   """LLM response class that provides the first candidate response from the
 
@@ -33,180 +36,209 @@ class LlmResponse(BaseModel):
   Attributes:
     content: The content of the response.
     grounding_metadata: The grounding metadata of the response.
-    partial: Marks this response as an incomplete fragment of a larger
-      response. Only used for streaming mode.
+    partial: Marks this response as an incomplete fragment of a larger response.
+      Only used for streaming mode.
     turn_complete: Indicates whether the response from the model is complete.
       Only used for streaming mode.
     error_code: Error code if the response is an error. Code varies by model.
     error_message: Error message if the response is an error.
     interrupted: Flag indicating that LLM was interrupted when generating the
-      content. Usually it's due to user interruption during a bidi streaming.
+      content. Usually it's due to user interruption during bidi streaming.
     custom_metadata: The custom metadata of the LlmResponse.
     input_transcription: Audio transcription of user input.
     output_transcription: Audio transcription of model output.
     avg_logprobs: Average log probability of the generated tokens.
-    logprobs_result: Detailed log probabilities for chosen and top candidate tokens.
+    logprobs_result: Detailed log probabilities for chosen and top candidate
+      tokens.
   """
 
   model_config = ConfigDict(
-      extra='forbid',
       alias_generator=alias_generators.to_camel,
+      extra='forbid',
       populate_by_name=True,
   )
   """The pydantic model config."""
 
-  model_version: str | None = None
-  """Output only. The model version used to generate the response."""
+  model_version: str | None = Field(
+      default=None,
+      description="""Output only. The model version used to generate the response.""",
+  )
 
-  content: types.Content | None = None
-  """The generative content of the response.
+  content: types.Content | None = Field(
+      default=None,
+      description="""The generative content of the response.
 
-  This should only contain content from the user or the model, and not any
-  framework or system-generated data.
-  """
+This should only contain content from the user or the model, and not any
+framework or system-generated data.""",
+  )
 
-  grounding_metadata: types.GroundingMetadata | None = None
-  """The grounding metadata of the response."""
+  grounding_metadata: types.GroundingMetadata | None = Field(
+      default=None, description="""The grounding metadata of the response."""
+  )
 
-  partial: bool | None = None
-  """Marks this response as an incomplete fragment of a larger response.
+  partial: bool | None = Field(
+      default=None,
+      description="""Marks this response as an incomplete fragment of a larger response.
 
-  Only used in streaming mode, where a producer emits zero or more fragments
-  and then one response with ``partial`` false or unset that carries the
-  complete content.
+Only used in streaming mode, where a producer emits zero or more
+fragments and then one response with `partial` false or unset that
+carries the complete content.
 
-  A fragment is a display hint. Its content may be truncated, may be repeated
-  by the completed response, and may hold a function call whose arguments have
-  not finished arriving. Nothing may execute a tool, persist an event, or end a
-  turn based on a fragment.
-  """
+A fragment is a display hint. Its content may be truncated, may be
+repeated by the completed response, and may hold a function call whose
+arguments have not finished arriving. Nothing may execute a tool, persist
+an event, or end a turn based on a fragment.""",
+  )
 
-  turn_complete: bool | None = None
-  """Indicates whether the response from the model is complete.
+  turn_complete: bool | None = Field(
+      default=None,
+      description="""Indicates whether the response from the model is complete.
+Only used for streaming mode.""",
+  )
 
-  Only used for streaming mode.
-  """
+  turn_complete_reason: types.TurnCompleteReason | None = Field(
+      default=None,
+      description="""The reason why the turn is complete. Only used for streaming mode.""",
+  )
 
-  turn_complete_reason: types.TurnCompleteReason | None = None
-  """The reason why the turn is complete.
+  interaction_status: types.InteractionStatus | None = Field(
+      default=None,
+      description="""The activity status of the live session, reported with `turn_complete`.
 
-  Only used for streaming mode.
-  """
+Newer live models may answer a single user prompt with several model
+turns, so `turn_complete` alone no longer means the model is done. This
+field disambiguates the two:
 
-  interaction_status: types.InteractionStatus | None = None
-  """The activity status of the live session, reported with `turn_complete`.
+* `IN_PROGRESS`: the model is still working on the user's prompt; more turns will follow,
+  so the app should not treat the interaction as finished (e.g. should not re-enable the
+  microphone yet).
+* `IDLE`: the model has finished processing the user's prompt and is waiting for further
+  user input.
 
-  Newer live models may answer a single user prompt with several model turns, so
-  `turn_complete` alone no longer means the model is done. This field
-  disambiguates the two:
+It stays `None` for models that don't report it. Callers building a
+turn-taking UI should fall back to treating `turn_complete == True` as
+terminal whenever `interaction_status` is `None`.
 
-  * `IN_PROGRESS`: the model is still working on the user's prompt; more turns
-    will follow, so the app should not treat the interaction as finished (e.g.
-    should not re-enable the microphone yet).
-  * `IDLE`: the model has finished processing the user's prompt and is waiting
-    for further user input.
+NOTE: this is not related to the Interactions API
+`InteractionStatusUpdate`.""",
+  )
 
-  It stays `None` for models that don't report it. Callers building a
-  turn-taking UI should fall back to treating `turn_complete == True` as
-  terminal whenever `interaction_status` is `None`.
+  finish_reason: types.FinishReason | None = Field(
+      default=None, description="""The finish reason of the response."""
+  )
 
-  NOTE: this is not related to the Interactions API InteractionStatusUpdate.
-  """
+  error_code: str | None = Field(
+      default=None,
+      description="""Error code if the response is an error. Code varies by model.""",
+  )
 
-  finish_reason: types.FinishReason | None = None
-  """The finish reason of the response."""
+  error_message: str | None = Field(
+      default=None, description="""Error message if the response is an error."""
+  )
 
-  error_code: str | None = None
-  """Error code if the response is an error. Code varies by model."""
+  interrupted: bool | None = Field(
+      default=None,
+      description="""Flag indicating that LLM was interrupted when generating the content.
+Usually it's due to user interruption during bidi streaming.""",
+  )
 
-  error_message: str | None = None
-  """Error message if the response is an error."""
+  custom_metadata: dict[str, Any] | None = Field(
+      default=None,
+      description="""The custom metadata of the LlmResponse.
+An optional key-value map to label an LlmResponse.
 
-  interrupted: bool | None = None
-  """Flag indicating that LLM was interrupted when generating the content.
-  Usually it's due to user interruption during a bidi streaming.
-  """
+NOTE: the entire dict must be JSON-serializable.""",
+  )
 
-  custom_metadata: dict[str, Any] | None = None
-  """The custom metadata of the LlmResponse.
+  usage_metadata: types.GenerateContentResponseUsageMetadata | None = Field(
+      default=None, description="""The usage metadata of the LlmResponse."""
+  )
 
-  An optional key-value pair to label an LlmResponse.
+  cache_creation_token_count: int | None = Field(
+      default=None,
+      description="""Number of prompt tokens written to the prompt cache for this response.
 
-  NOTE: the entire dict must be JSON serializable.
-  """
+The cache-*write* counterpart to
+``usage_metadata.cached_content_token_count`` (cache-*read*); both are a
+breakdown of ``usage_metadata.prompt_token_count``.
 
-  usage_metadata: types.GenerateContentResponseUsageMetadata | None = None
-  """The usage metadata of the LlmResponse"""
-
-  cache_creation_token_count: int | None = None
-  """Number of prompt tokens written to the prompt cache for this response.
-
-  The cache-*write* counterpart to
-  ``usage_metadata.cached_content_token_count`` (cache-*read*); both are a
-  breakdown of ``usage_metadata.prompt_token_count``.
-
-  The model backends also attach this value to ``usage_metadata`` as
-  ``cache_creation_input_tokens`` for OpenTelemetry, but ``google.genai``'s
-  usage type forbids extra fields, so that attribute is dropped on
-  serialization. This field surfaces the same count on the (serializable)
-  ``LlmResponse`` / ``Event`` so it is visible to the dev UI, persisted
-  sessions, and other event consumers -- not only telemetry. Only populated
-  for providers/turns that report cache writes; ``None`` otherwise.
-  """
+The model backends also attach this value to ``usage_metadata`` as
+``cache_creation_input_tokens`` for OpenTelemetry, but ``google.genai``'s
+usage type forbids extra fields, so that attribute is dropped on
+serialization. This field surfaces the same count on the (serializable)
+``LlmResponse`` / ``Event`` so it is visible to the dev UI, persisted
+sessions, and other event consumers -- not only telemetry. Only populated
+for providers/turns that report cache writes; ``None`` otherwise.""",
+  )
 
   live_session_resumption_update: (
       types.LiveServerSessionResumptionUpdate | None
-  ) = None
-  """The session resumption update of the LlmResponse"""
+  ) = Field(
+      default=None,
+      description="""The session resumption update of the LlmResponse.""",
+  )
 
-  live_session_id: str | None = None
-  """The session ID of the Live session."""
+  live_session_id: str | None = Field(
+      default=None, description="""The session ID of the Live session."""
+  )
 
-  go_away: types.LiveServerGoAway | None = None
-  """The GoAway signal from the Live model."""
+  go_away: types.LiveServerGoAway | None = Field(
+      default=None, description="""The GoAway signal from the Live model."""
+  )
 
-  voice_activity: types.VoiceActivity | None = None
-  """Voice activity signal from the Live model."""
+  voice_activity: types.VoiceActivity | None = Field(
+      default=None, description="""Voice activity signal from the Live model."""
+  )
 
-  input_transcription: types.Transcription | None = None
-  """Audio transcription of user input."""
+  input_transcription: types.Transcription | None = Field(
+      default=None, description="""Audio transcription of user input."""
+  )
 
-  output_transcription: types.Transcription | None = None
-  """Audio transcription of model output."""
+  output_transcription: types.Transcription | None = Field(
+      default=None, description="""Audio transcription of model output."""
+  )
 
-  avg_logprobs: float | None = None
-  """Average log probability of the generated tokens."""
+  avg_logprobs: float | None = Field(
+      default=None,
+      description="""Average log probability of the generated tokens.""",
+  )
 
-  logprobs_result: types.LogprobsResult | None = None
-  """Detailed log probabilities for chosen and top candidate tokens."""
+  logprobs_result: types.LogprobsResult | None = Field(
+      default=None,
+      description="""Detailed log probabilities for chosen and top candidate tokens.""",
+  )
 
-  cache_metadata: CacheMetadata | None = None
-  """Context cache metadata if caching was used for this response.
+  cache_metadata: CacheMetadata | None = Field(
+      default=None,
+      description="""Context cache metadata if caching was used for this response.
 
-  Contains cache identification, usage tracking, and lifecycle information.
-  This field is automatically populated when context caching is enabled.
-  """
+Contains cache identification, usage tracking, and lifecycle
+information. Automatically populated when context caching is enabled.""",
+  )
 
-  citation_metadata: types.CitationMetadata | None = None
-  """Citation metadata for the response.
+  citation_metadata: types.CitationMetadata | None = Field(
+      default=None,
+      description="""Citation metadata for the response.
+Automatically populated when citation is enabled.""",
+  )
 
-  This field is automatically populated when citation is enabled.
-  """
+  interaction_id: str | None = Field(
+      default=None,
+      description="""The interaction ID from the Interactions API.
 
-  interaction_id: str | None = None
-  """The interaction ID from the interactions API.
+Populated when using the Interactions API for model invocation to
+identify and chain interactions for stateful conversations.""",
+  )
 
-  This field is populated when using the interactions API for model invocation.
-  It can be used to identify and chain interactions for stateful conversations.
-  """
+  environment_id: str | None = Field(
+      default=None,
+      description="""The execution environment ID from the Interactions API.
 
-  environment_id: str | None = None
-  """The execution environment ID from the interactions API.
-
-  This field is populated when an interactions-API agent (e.g. ManagedAgent)
-  provisions or reuses a sandbox environment. It is persisted on the resulting
-  Event so subsequent turns can reuse the same environment for stateful work.
-  """
+Populated when an Interactions-API agent (e.g. `ManagedAgent`) provisions
+or reuses a sandbox environment. It is persisted on the resulting `Event`
+so subsequent turns can reuse the same environment for stateful work.""",
+  )
+  ### END_GENERATED_CODE: LlmResponse
 
   def get_function_calls(self) -> list[types.FunctionCall]:
     """Returns the function calls in the response."""
